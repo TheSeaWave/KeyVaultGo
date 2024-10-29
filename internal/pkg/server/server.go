@@ -1,71 +1,76 @@
 package server
 
 import (
-	"dz1/internal/pkg/storage"
-	"encoding/json"
+	"log"
 	"net/http"
+
+	"dz1/internal/pkg/storage" // замените на фактический путь к storage.go
 
 	"github.com/gin-gonic/gin"
 )
 
+// Server struct содержит Gin engine и экземпляр Storage
 type Server struct {
-	host    string
-	storage *storage.Storage
+	router  *gin.Engine
+	storage storage.Storage
 }
 
-type Entry struct {
-	Value string `json:"value"`
-}
-
-func New(host string, st *storage.Storage) *Server {
-	s := &Server{
-		host:    host,
-		storage: st,
+// NewServer создает новый сервер с указанным хранилищем
+func NewServer(s storage.Storage) *Server {
+	server := &Server{
+		router:  gin.Default(),
+		storage: s,
 	}
 
-	return s
+	// Определяем маршруты
+	server.routes()
+
+	return server
 }
 
-func (r *Server) newAPI() *gin.Engine {
-	engine := gin.New()
-
-	engine.GET("/health", func(ctx *gin.Context) {
-		ctx.Status(http.StatusOK)
-	})
-
-	engine.PUT("/scalar/set/:key", r.handlerSet)
-	engine.GET("/scalar/get/:key", r.handlerGet)
-
-	return engine
+// routes задает маршруты сервера
+func (s *Server) routes() {
+	s.router.GET("/health", s.handleHealth)
+	s.router.GET("/scalar/get/:key", s.handleGetScalar)
+	s.router.PUT("/scalar/set/:key", s.handleSetScalar)
 }
 
-func (r *Server) handlerSet(ctx *gin.Context) {
-	key := ctx.Param("key")
+// Health endpoint для проверки состояния сервера
+func (s *Server) handleHealth(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"status": "OK"})
+}
 
-	var v Entry
+// GET /scalar/get/:key - получение значения скаляра по ключу
+func (s *Server) handleGetScalar(c *gin.Context) {
+	key := c.Param("key")
+	value := s.storage.Get(key)
+	if value == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "key not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"key": key, "value": *value})
+}
 
-	if err := json.NewDecoder(ctx.Request.Body).Decode(&v); err != nil {
-		ctx.AbortWithStatus(http.StatusBadRequest)
+// PUT /scalar/set/:key - установка значения скаляра по ключу
+func (s *Server) handleSetScalar(c *gin.Context) {
+	key := c.Param("key")
+
+	// Парсим JSON body для получения значения
+	var body struct {
+		Value string `json:"Value"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
 	}
 
-	r.storage.Set(key, v.Value)
-
-	ctx.Status(http.StatusOK)
+	// Устанавливаем значение в хранилище
+	s.storage.Set(key, body.Value)
+	c.Status(http.StatusOK)
 }
 
-func (r *Server) handlerGet(ctx *gin.Context) {
-	key := ctx.Param("key")
-
-	v := r.storage.Get(key)
-	if v == nil {
-		ctx.AbortWithStatus(http.StatusNotFound)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, Entry{Value: *v})
-}
-
-func (r *Server) Start() {
-	r.newAPI().Run(r.host)
+// Run запускает сервер на указанном адресе
+func (s *Server) Run(addr string) error {
+	log.Printf("Starting server on %s", addr)
+	return s.router.Run(addr)
 }

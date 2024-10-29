@@ -1,10 +1,13 @@
 package main
 
 import (
+	"dz1/internal/pkg/server"
+	"dz1/internal/pkg/storage"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 )
 
@@ -196,5 +199,17 @@ func main() {
 	err = SaveToDisk()
 	if err != nil {
 		fmt.Println("Ошибка при сохранении состояния:", err)
+	}
+
+	// Создаем экземпляр storage
+	storageInstance, err := storage.NewStorage()
+	if err != nil {
+		log.Fatalf("Failed to create storage: %v", err)
+	}
+
+	// Инициализируем и запускаем сервер
+	serverInstance := server.NewServer(storageInstance)
+	if err := serverInstance.Run(":8090"); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
 	}
 }
