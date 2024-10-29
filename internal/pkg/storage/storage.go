@@ -8,6 +8,15 @@ import (
 
 type Kind string
 
+// Добавьте интерфейс StorageInterface в storage.go
+type StorageInterface interface {
+	Set(key, value string)
+	Get(key string) *string
+}
+
+// Теперь измените `Storage`, чтобы он реализовал интерфейс
+var _ StorageInterface = (*Storage)(nil) // Проверка на реализацию интерфейса
+
 const (
 	KindInt       Kind = "D"
 	KindString    Kind = "S"

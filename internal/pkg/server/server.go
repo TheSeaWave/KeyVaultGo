@@ -9,22 +9,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Server struct содержит Gin engine и экземпляр Storage
+// Импортируйте интерфейс StorageInterface вместо конкретного типа
 type Server struct {
 	router  *gin.Engine
-	storage storage.Storage
+	storage storage.StorageInterface // Используем интерфейс
 }
 
 // NewServer создает новый сервер с указанным хранилищем
-func NewServer(s storage.Storage) *Server {
+func NewServer(s storage.StorageInterface) *Server { // Используем интерфейс
 	server := &Server{
 		router:  gin.Default(),
 		storage: s,
 	}
-
-	// Определяем маршруты
 	server.routes()
-
 	return server
 }
 
