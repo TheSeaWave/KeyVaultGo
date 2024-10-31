@@ -8,14 +8,13 @@ import (
 
 type Kind string
 
-// Добавьте интерфейс StorageInterface в storage.go
+// Чтобы тестировать с помощью моков, нужно storage определить как интерфейс
 type StorageInterface interface {
 	Set(key, value string)
 	Get(key string) *string
 }
 
-// Теперь измените `Storage`, чтобы он реализовал интерфейс
-var _ StorageInterface = (*Storage)(nil) // Проверка на реализацию интерфейса
+var _ StorageInterface = (*Storage)(nil)
 
 const (
 	KindInt       Kind = "D"

@@ -11,7 +11,7 @@ import (
 	"os"
 )
 
-// Файл для хранения состояния
+// Скоро ты умрёшь!
 const dbFile = "db.json"
 
 // Хранилище для списков
@@ -22,7 +22,7 @@ func LoadFromDisk() error {
 	file, err := os.Open(dbFile)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil // Файл не существует, загружать нечего
+			return nil // Файл не существует
 		}
 		return err
 	}
@@ -153,7 +153,6 @@ func parseCountIndexes(count []int, listLength int) (int, int) {
 	return start, end
 }
 
-// Пример использования с загрузкой и сохранением состояния
 func main() {
 	// Загружаем состояние из файла
 	err := LoadFromDisk()
@@ -162,44 +161,11 @@ func main() {
 		return
 	}
 
-	// Операции с базой данных
-	fmt.Println("LPUSH:", LPUSH("list1", 1, 2, 3))      // LPUSH list1 1 2 3
-	fmt.Println("RPUSH:", RPUSH("list1", 4, 5, 6))      // RPUSH list1 4 5 6
-	fmt.Println("RADDTOSET:", RADDTOSET("list1", 3, 7)) // RADDTOSET list1 3 7
-
-	removedElements, err := LPOP("list1", 2) // LPOP list1 2
-	if err != nil {
-		fmt.Println("Ошибка LPOP:", err)
-	} else {
-		fmt.Println("LPOP:", removedElements)
-	}
-
-	removedElements, err = RPOP("list1", 1) // RPOP list1 1
-	if err != nil {
-		fmt.Println("Ошибка RPOP:", err)
-	} else {
-		fmt.Println("RPOP:", removedElements)
-	}
-
-	err = LSET("list1", 1, 99) // LSET list1 1 99
-	if err != nil {
-		fmt.Println("Ошибка LSET:", err)
-	} else {
-		fmt.Println("LSET OK")
-	}
-
-	element, err := LGET("list1", 1) // LGET list1 1
-	if err != nil {
-		fmt.Println("Ошибка LGET:", err)
-	} else {
-		fmt.Println("LGET:", element)
-	}
-
 	// Сохраняем состояние на диск
-	err = SaveToDisk()
-	if err != nil {
-		fmt.Println("Ошибка при сохранении состояния:", err)
-	}
+	// err = SaveToDisk()
+	// if err != nil {
+	// 	fmt.Println("Ошибка при сохранении состояния:", err)
+	// }
 
 	// Создаем экземпляр storage
 	storageInstance, err := storage.NewStorage()

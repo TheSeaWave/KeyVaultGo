@@ -4,19 +4,19 @@ import (
 	"log"
 	"net/http"
 
-	"dz1/internal/pkg/storage" // замените на фактический путь к storage.go
+	"dz1/internal/pkg/storage"
 
 	"github.com/gin-gonic/gin"
 )
 
-// Импортируйте интерфейс StorageInterface вместо конкретного типа
+// Импортирует StorageInterface
 type Server struct {
 	router  *gin.Engine
-	storage storage.StorageInterface // Используем интерфейс
+	storage storage.StorageInterface
 }
 
 // NewServer создает новый сервер с указанным хранилищем
-func NewServer(s storage.StorageInterface) *Server { // Используем интерфейс
+func NewServer(s storage.StorageInterface) *Server {
 	server := &Server{
 		router:  gin.Default(),
 		storage: s,
@@ -25,7 +25,6 @@ func NewServer(s storage.StorageInterface) *Server { // Используем и�
 	return server
 }
 
-// routes задает маршруты сервера
 func (s *Server) routes() {
 	s.router.GET("/health", s.handleHealth)
 	s.router.GET("/scalar/get/:key", s.handleGetScalar)
@@ -52,7 +51,6 @@ func (s *Server) handleGetScalar(c *gin.Context) {
 func (s *Server) handleSetScalar(c *gin.Context) {
 	key := c.Param("key")
 
-	// Парсим JSON body для получения значения
 	var body struct {
 		Value string `json:"Value"`
 	}
@@ -61,12 +59,10 @@ func (s *Server) handleSetScalar(c *gin.Context) {
 		return
 	}
 
-	// Устанавливаем значение в хранилище
 	s.storage.Set(key, body.Value)
 	c.Status(http.StatusOK)
 }
 
-// Run запускает сервер на указанном адресе
 func (s *Server) Run(addr string) error {
 	log.Printf("Starting server on %s", addr)
 	return s.router.Run(addr)
