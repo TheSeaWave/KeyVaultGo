@@ -8,6 +8,14 @@ import (
 
 type Kind string
 
+// Чтобы тестировать с помощью моков, нужно storage определить как интерфейс
+type StorageInterface interface {
+	Set(key, value string)
+	Get(key string) *string
+}
+
+var _ StorageInterface = (*Storage)(nil)
+
 const (
 	KindInt       Kind = "D"
 	KindString    Kind = "S"
