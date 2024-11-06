@@ -9,6 +9,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 // Скоро ты умрёшь!
@@ -16,6 +18,16 @@ const dbFile = "db.json"
 
 // Хранилище для списков
 var store = make(map[string][]int)
+
+// gracefulShutdown обрабатывает завершение работы и сохраняет данные
+func gracefulShutdown() {
+	err := SaveToDisk()
+	if err != nil {
+		log.Printf("Ошибка при сохранении состояния: %v", err)
+	} else {
+		log.Println("Данные успешно сохранены перед завершением работы")
+	}
+}
 
 // LoadFromDisk загружает состояние из файла на диск
 func LoadFromDisk() error {
@@ -161,21 +173,27 @@ func main() {
 		return
 	}
 
-	// Сохраняем состояние на диск
-	// err = SaveToDisk()
-	// if err != nil {
-	// 	fmt.Println("Ошибка при сохранении состояния:", err)
-	// }
-
-	// Создаем экземпляр storage
+	// Создаем экземпляр хранилища
 	storageInstance, err := storage.NewStorage()
 	if err != nil {
 		log.Fatalf("Failed to create storage: %v", err)
 	}
 
-	// Инициализируем и запускаем сервер
+	// Инициализируем сервер
 	serverInstance := server.NewServer(storageInstance)
-	if err := serverInstance.Run(":8090"); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
+
+	// Запускаем сервер в горутине
+	go func() {
+		if err := serverInstance.Run(":8090"); err != nil {
+			log.Fatalf("Failed to start server: %v", err)
+		}
+	}()
+
+	// Настраиваем обработчик SIGINT/SIGTERM
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	<-c // Ожидаем сигнал
+
+	// Graceful shutdown
+	gracefulShutdown()
 }
