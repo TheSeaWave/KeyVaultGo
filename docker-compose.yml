@@ -1,0 +1,19 @@
+# docker-compose.yml
+
+version: "3.8"
+
+services:
+  app:
+    build: .
+    container_name: storage_app
+    ports:
+      - "8090:8090"
+    volumes:
+      - db_data:/app/db.json
+    stop_grace_period: 30s  # Время на завершение работы перед остановкой
+    restart: always  # Перезапуск при сбоях
+    environment:
+      - GIN_MODE=release  # Режим продакшн для Gin
+
+volumes:
+  db_data:
